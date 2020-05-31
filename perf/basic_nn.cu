@@ -37,8 +37,8 @@ using namespace std;
 
 enum Layout {Column_major, Row_major};
 
-#define CUDA_MODE
-// #define TENSOR_MODE
+// #define CUDA_MODE
+#define TENSOR_MODE
 
 #ifdef CUDA_MODE
 typedef float type_ab;
@@ -842,15 +842,15 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   N_ori[block_num - 1] = N - N_ori_off;
   N_cal[block_num - 1] = N_pruned - N_cal_off;
 
-  for(int i = 0; i < block_num; i++)
-  {
-    printf("%d %d\n", N_ori[i],N_cal[i]);
-  }
+  // for(int i = 0; i < block_num; i++)
+  // {
+  //   printf("%d %d\n", N_ori[i],N_cal[i]);
+  // }
 
-  for(int i = 0; i < block_num; i++)
-  {
-    printf("%d %d\n", K_cal[i],K_cal[i]);
-  }
+  // for(int i = 0; i < block_num; i++)
+  // {
+  //   printf("%d %d\n", K_cal[i],K_cal[i]);
+  // }
   // gen_Ns(N, N_pruned, N_ori, N_cal, block_num);
 
   // To generate the global memory offset for B and C.
@@ -876,17 +876,17 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
     cudaMalloc(&mask_k[i], K_cal[i] * sizeof(int));
     cudaMemcpy(mask_k[i], mask_k_host.data(), K_cal[i]*sizeof(int), cudaMemcpyHostToDevice);
 
-    for(int j = 0; j < mask_k_host.size(); j++)
-     printf("%d ", mask_k_host[j]);
-     printf("\n\n");
+    // for(int j = 0; j < mask_k_host.size(); j++)
+    //  printf("%d ", mask_k_host[j]);
+    //  printf("\n\n");
 
     vector<int> mask_n_host = mask_gen(N_ori[i], N_cal[i]);
     cudaMalloc(&mask_n[i], N_dim * sizeof(int));
     cudaMemcpy(mask_n[i], mask_n_host.data(), N_dim*sizeof(int), cudaMemcpyHostToDevice);
 
-    for(int j = 0; j < mask_n_host.size(); j++)
-      printf("%d ", mask_n_host[j]);
-    printf(" \n\n");
+    // for(int j = 0; j < mask_n_host.size(); j++)
+    //   printf("%d ", mask_n_host[j]);
+    // printf(" \n\n");
 
     // Prune the weights
     gen_cutlass_weight(hB_float_purned, hB_float, K, N, mask_k_host, mask_n_host, K_cal[i], N_cal[i], off_C[i] / M);
