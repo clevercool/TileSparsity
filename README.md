@@ -3,7 +3,7 @@ CUTLASS Profiling
 
 ## Build and Run
 ```shell
-$ git clone ...
+$ git clone https://github.com/clevercool/SCTest.git
 $ cd SCTest
 $ mkdir -p build && cd build
 $ cmake -DSM=75 -DCMAKE_BUILD_TYPE=Release ..
