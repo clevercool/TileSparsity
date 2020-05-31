@@ -58,114 +58,6 @@ const int MAX_BLOCK_NUM = 32;
 
 // #define DEBUG
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// The source code after this point in the file is generic CUDA using the CUDA Runtime API
-// and simple CUDA kernels to initialize matrices and compute the general matrix product.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class TileGEMM_2D{
-public:
-    int dim = 0;
-    int N_dim_block_num;
-
-    int *N_dim_num;
-    int **N_dim_mask;
-
-    int *K_dim_num;
-    int **K_dim_mask;
-
-    TileGEMM_2D(int dimen)
-    {
-        dim = dimen;
-        N_dim_block_num = 0;
-        N_dim_num = NULL;
-        N_dim_mask = NULL;
-        K_dim_num = NULL;
-        K_dim_mask = NULL;
-    }
-
-    void init_2d()
-    {
-        cin >> N_dim_block_num;
-
-        N_dim_num = new int[N_dim_block_num];
-        N_dim_mask = new int*[N_dim_block_num];
-
-        for(int i = 0; i < N_dim_block_num; i++)
-        {
-            cin >> N_dim_num[i];
-            N_dim_mask[i] = new int[N_dim_num[i]];
-            for(int j = 0; j < N_dim_num[i]; j++)
-            {
-                cin >> N_dim_mask[i][j];
-            }
-        }
-    }
-
-    void init_1d()
-    {
-        if(dim == 2)
-        {
-            int tem_N_dim_block_num;
-            cin >> tem_N_dim_block_num;
-            assert(tem_N_dim_block_num == N_dim_block_num);
-            
-            K_dim_num = new int[N_dim_block_num];
-            K_dim_mask = new int*[N_dim_block_num];
-
-            for(int i = 0; i < N_dim_block_num; i++)
-            {
-                int tem_N_dim_num;
-                cin >> tem_N_dim_num;
-                assert(tem_N_dim_num == N_dim_num[i]);
-            }
-
-            for(int i = 0; i < N_dim_block_num; i++)
-            {
-                cin >> K_dim_num[i];
-                K_dim_mask[i] = new int[K_dim_num[i]];
-                for(int j = 0; j < K_dim_num[i]; j++)
-                {
-                    cin >> K_dim_mask[i][j];
-                }
-            }
-        }
-        else if(dim == 1)
-        {
-            cin >> N_dim_block_num;
-            
-            N_dim_num = new int[N_dim_block_num];
-            N_dim_mask = new int*[N_dim_block_num];
-            
-            for(int i = 0; i < N_dim_block_num; i++)
-            {
-                cin >> N_dim_num[i];
-                N_dim_mask[i] = new int[N_dim_num[i]];
-                for(int j = 0; j < N_dim_num[i]; j++)
-                {
-                    N_dim_mask[i][j] = 0;
-                }
-            }
-
-            K_dim_num = new int[N_dim_block_num];
-            K_dim_mask = new int*[N_dim_block_num];
-            
-            for(int i = 0; i < N_dim_block_num; i++)
-            {
-                cin >> K_dim_num[i];
-                K_dim_mask[i] = new int[K_dim_num[i]];
-                for(int j = 0; j < K_dim_num[i]; j++)
-                {
-                    cin >> K_dim_mask[i][j];
-                }
-            }
-        }
-    }
-};
-
 template<typename T_>
 void print_matrix(const std::vector<T_> A, const int M, const int N, Layout lay, int num){
   printf("Matrix:");
@@ -267,7 +159,7 @@ __global__ void deleteColumn_kernel(
 
 
 template<typename T>
-__global__ void reverseRow_kernel(
+__global__ void insertRow_kernel(
   T *matrix,
   T const *matrix_2,
   int rows,
@@ -313,7 +205,7 @@ cudaError_t deleteColumn(T const *matrix, T *matrix_2, int rows, int columns, in
 }
 
 template<typename T>
-cudaError_t reverseRow(T *matrix, T const *matrix_2, int rows, int columns, int *mask) {
+cudaError_t insertRow(T *matrix, T const *matrix_2, int rows, int columns, int *mask) {
 
   dim3 block(16, 16);
   dim3 grid(
@@ -321,7 +213,7 @@ cudaError_t reverseRow(T *matrix, T const *matrix_2, int rows, int columns, int 
     (columns + block.y - 1) / block.y
   );
 
-  reverseRow_kernel<T><<< grid, block >>>(matrix, matrix_2, rows, columns, mask);
+  insertRow_kernel<T><<< grid, block >>>(matrix, matrix_2, rows, columns, mask);
 
   return cudaGetLastError();
 }
@@ -338,31 +230,32 @@ GemmTraits_NN;
 
 
 #ifdef TENSOR_MODE
-typedef cutlass::gemm::Volta884GemmTraits<
-  cutlass::MatrixLayout::kColumnMajor,
-  cutlass::MatrixLayout::kColumnMajor,
-  cutlass::Shape<32, 128, 128>,
-  cutlass::Shape<32, 64, 64>,
-  half,
-  half,
-  half,
-  2
-> GemmTraits_NN;
-#endif
-
-
-//   typedef cutlass::gemm::WmmaGemmTraits<
+// typedef cutlass::gemm::Volta884GemmTraits<
 //   cutlass::MatrixLayout::kColumnMajor,
 //   cutlass::MatrixLayout::kColumnMajor,
 //   cutlass::Shape<32, 128, 128>,
-//   type_ab,
-//   type_ab,
-//   type_c,
-//   cutlass::gemm::LinearScaling<half>,
-//   type_c,
-//   cutlass::Shape<32, 64, 32>
-// >
-// GemmTraits_NN;
+//   cutlass::Shape<32, 64, 64>,
+//   half,
+//   half,
+//   half,
+//   2
+// > GemmTraits_NN;
+
+
+  typedef cutlass::gemm::WmmaGemmTraits<
+  cutlass::MatrixLayout::kColumnMajor,
+  cutlass::MatrixLayout::kColumnMajor,
+  cutlass::Shape<32, 128, 128>,
+  type_ab,
+  type_ab,
+  type_c,
+  cutlass::gemm::LinearScaling<half>,
+  type_c,
+  cutlass::Shape<32, 64, 32>
+>
+GemmTraits_NN;
+
+#endif
 
 // typedef cutlass::gemm::Volta884GemmTraits<
 //   cutlass::MatrixLayout::kColumnMajor,
@@ -454,18 +347,11 @@ cudaError_t Cutlass_Gemm_NN(
   cudaEventRecord(stopcutlass);
   cudaEventSynchronize(stopcutlass);
   float cutlassTime;
-  float mnk_sim = (float)M * (float)N * (float)K;
   cudaEventElapsedTime(&cutlassTime, startcutlass, stopcutlass);
-  cutlassTime /= ites;
-  // printf("\n*********** Simple CUTLASS Test ***********\n");
-  // printf("\nMartrix Size (M,N,K) : (%d,%d,%d)\n", M, N, K);
-  // printf("\nPruned Martrix Size (M,N,K) : (%d,%d,%d)\n", M, N_pruned, K_pruned);
-  // printf("\nTime %fms\n", cutlassTime);
-  // printf("Simulation Performance %f TFLOPS\n", 2 * mnk_sim  / cutlassTime / 1000 / 1000 / 1000);
-  // printf("Real performance %f TFLOPS\n\n", 2 * mnk_pruning  / cutlassTime / 1000 / 1000 / 1000);
-  // printf("\n********************************************\n");
+  cutlassTime /= (float)ites;
 
-  printf("%f\n", cutlassTime * 1000);
+  printf("CUTLASS Baseline time %f ns.\n", cutlassTime * 1000);
+
   // Return any errors associated with the launch or cudaSuccess if no error.
   return cudaGetLastError();
 }
@@ -489,7 +375,6 @@ cudaError_t Stream_Gemm_NN(
   int off_C[]) {
     
   typename Gemm_NN::Params params;  
-  int result = 0;
   cudaStream_t stream[32];
   for(int i = 0; i < 32; i++)
   {
@@ -506,23 +391,22 @@ cudaError_t Stream_Gemm_NN(
   {
     for(int bn = 0; bn < block_num; bn++ )
     {
-      result = params.initialize(
-        M,        // GEMM M dimension
+      params.initialize(
+        M,                // GEMM M dimension
         N_cal[bn],        // GEMM N dimension
-        K_cal[bn],     // GEMM K dimension
-        alpha,    // scalar alpha
-        A,        // matrix A operand
+        K_cal[bn],        // GEMM K dimension
+        alpha,            // scalar alpha
+        A,                // matrix A operand
         M,
-        B + off_B[bn],     // matrix B operand
+        B + off_B[bn],    // matrix B operand
         K,
-        beta,     // scalar beta
-        C + off_C[bn],        // source matrix C
+        beta,             // scalar beta
+        C + off_C[bn],    // source matrix C
         M,
-        C + off_C[bn],     // destination matrix C (may be different memory than source C matrix)
+        C + off_C[bn],    // destination matrix C (may be different memory than source C matrix)
         M
       );
       Gemm_NN::launch(params, mask_k[bn], mask_n[bn], stream[bn]);
-      // Gemm_NN::launch(params);
     }
     cudaDeviceSynchronize();
   }
@@ -532,16 +416,8 @@ cudaError_t Stream_Gemm_NN(
   float cutlassTime;
   cudaEventElapsedTime(&cutlassTime, startcutlass, stopcutlass);
   cutlassTime /= (float)ites;
-  //printf("\nCUTLASS STREAM took: \n%fms\n", cutlassTime);
-  float tt = (float)M * (float)N * (float)K * (float)block_num;
-  //printf("CUTLASS STREAM performance K source %f TFLOPS\n\n", 2 * tt  / cutlassTime / 1000 / 1000 / 1000);
-  // printf("\n*********** CUTLASS STREAM Test ***********\n");
-  // printf("\nMartrix Size (M,N,K) block_num : (%d,%d,%d) %d\n", M, N, K, block_num);
-  // printf("\nPruned Martrix Size (M,N,K) : (%d,%d,%d)\n", M, N, K);
-  // printf("\nTime %fms\n", cutlassTime);
-  // printf("\n********************************************\n");
-  printf("%f\n", cutlassTime * 1000);
-  // Return any errors associated with the launch or cudaSuccess if no error.
+
+  printf("Stream GEMM time: %f ns\n", cutlassTime * 1000);
   for(int i = 0; i < 32; i ++)
   {
     cudaStreamDestroy(stream[i]);
@@ -569,9 +445,7 @@ cudaError_t Stream_Gemm_NN_reference(
   int off_B[],
   int off_C[]) {
     
-  typename Gemm_NN::Params params;  
-  int result = 0;
-
+  typename Gemm_NN::Params params;
   type_ab *A_2;
   cudaMalloc(&A_2, M * K * sizeof(type_ab));
   type_ab *C_2;
@@ -583,7 +457,7 @@ cudaError_t Stream_Gemm_NN_reference(
 
     deleteRow<type_ab>(C + off_C[bn], C_2, N_cal[bn], M, mask_n[bn]);
 
-    result = params.initialize(
+    params.initialize(
       M,        // GEMM M dimension
       N_cal[bn],        // GEMM N dimension
       K_cal[bn],     // GEMM K dimension
@@ -602,7 +476,7 @@ cudaError_t Stream_Gemm_NN_reference(
 
     cudaDeviceSynchronize();
 
-    reverseRow<type_ab>(C + off_C[bn], C_2, N_cal[bn], M, mask_n[bn]);
+    insertRow<type_ab>(C + off_C[bn], C_2, N_cal[bn], M, mask_n[bn]);
   }
   cudaFree(A_2);
   cudaFree(C_2);
@@ -628,8 +502,7 @@ cudaError_t CuBlas_Gemm_NN_reference(
   int off_B[],
   int off_C[]) {
     
-  typename Gemm_NN::Params params;  
-  int result = 0;
+  typename Gemm_NN::Params params;
 
   cublasHandle_t cublasHandle;
   cublasCreate(&cublasHandle);
@@ -657,7 +530,7 @@ cudaError_t CuBlas_Gemm_NN_reference(
 
     cudaDeviceSynchronize();
 
-    reverseRow<type_ab>(C + off_C[bn], C_2, N_cal[bn], M, mask_n[bn]);
+    insertRow<type_ab>(C + off_C[bn], C_2, N_cal[bn], M, mask_n[bn]);
   }
   cudaFree(A_2);
   cudaFree(C_2);
@@ -710,10 +583,7 @@ cudaError_t ReferenceGemm(
   cudaEventSynchronize(stopcublas);
   float cublasTime;
   cudaEventElapsedTime(&cublasTime, startcublas, stopcublas);
-  float mnk = (float)M * (float)N * (float)K;
   cublasTime /= (float)ites;
-  // printf("\ncublas took %fms\n", cublasTime);
-  // printf("cublas performance %f TFLOPS \n\n", 2 * mnk  / cublasTime / 1000 / 1000 / 1000);
   printf("%f\n", cublasTime * 1000);
 
   return cudaGetLastError();
@@ -725,7 +595,7 @@ void init_matrix(float* mat, int M, int N)
   {
     for(int j = 0; j < N; j++)
     {
-      mat[i * N + j] = float(rand()) / float(RAND_MAX / 1) - 0.5;
+      mat[i * N + j] = float( double (rand()) / double(RAND_MAX / 1) - 0.5 );
     }
   }
 }
@@ -879,10 +749,9 @@ void gen_masked_stream_weight(float* dst_mat, float* src_mat, int K, int N, vect
 }
 
 template<typename T>
-void checkout(vector<T> host_cutlass, vector<T> host_reference, int M, int N, bool trans, float err)
+void checkout(vector<T> host_cutlass, vector<T> host_reference, int M, int N, bool trans, double err)
 {
   int errors = 0;
-  int printn = 0;
   for (int i = 0; i < M; i++) {
     for(int j = 0; j < N;  j++)
     {
@@ -893,8 +762,6 @@ void checkout(vector<T> host_cutlass, vector<T> host_reference, int M, int N, bo
         v1 = host_reference[i * N + j];
 
       float v2 = host_cutlass[i * N + j];
-      // float v2 = host_reference[j * M + i];
-      //  printn++;if (printn < 10) printf("%f %f\n", v1, v2);
       if (v1 / v2 > (1+err) || v2 / v1 > (1+err) || abs(v2 - v1) > err) {
         errors++;
         if (errors < 10) printf("%f %f\n", v1, v2);
@@ -903,7 +770,6 @@ void checkout(vector<T> host_cutlass, vector<T> host_reference, int M, int N, bo
   }
   if (errors > 0) {
     std::cerr << "CUTLASS results incorrect. Errors : " << errors << " / "<<  (M*N) << std::endl << std::endl;
-    // return cudaErrorUnknown;
   }
   else
   {
@@ -951,13 +817,16 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   assert(block_num <= MAX_BLOCK_NUM);
   printf("block_num : %d\n", block_num);
 
+  // K_cal is pruned K size to calculate.
   int K_cal[MAX_BLOCK_NUM];
   for(int i = 0; i < block_num; i++)
   {
     K_cal[i] = K_pruned;
   }
 
+  // N_ori is original N size of this block;
   int N_ori[MAX_BLOCK_NUM];
+  // N_cal is pruned N size to calculate.
   int N_cal[MAX_BLOCK_NUM];
   int N_ori_off = 0;
   int N_cal_off = 0;
@@ -982,6 +851,7 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   // }
   // gen_Ns(N, N_pruned, N_ori, N_cal, block_num);
 
+  // To generate the global memory offset for B and C.
   int off_B[MAX_BLOCK_NUM];
   int off_C[MAX_BLOCK_NUM];
   int offset_B = 0;
@@ -994,12 +864,12 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
     offset_C += M * N_ori[i];
   }
 
+  // To generate masks for K-dim and N-dim.
   int *mask_k[MAX_BLOCK_NUM];
   int *mask_n[MAX_BLOCK_NUM];
 
   for(int i = 0; i < block_num; i++)
   {
-
     vector<int> mask_k_host = mask_gen(K, K_cal[i]);
     cudaMalloc(&mask_k[i], K_cal[i] * sizeof(int));
     cudaMemcpy(mask_k[i], mask_k_host.data(), K_cal[i]*sizeof(int), cudaMemcpyHostToDevice);
@@ -1016,7 +886,10 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
     //   printf("%d ", mask_n_host[j]);
     // printf(" \n\n");
 
+    // Prune the weights
     gen_cutlass_weight(hB_float_purned, hB_float, K, N, mask_k_host, mask_n_host, K_cal[i], N_cal[i], off_C[i] / M);
+
+    // Prune and organize weights for Stream GEMM
     gen_masked_stream_weight(hB_float_stream, hB_float, K, N, mask_k_host, mask_n_host, K_cal[i], N_cal[i], off_C[i] / M);
   }
 
@@ -1064,10 +937,9 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   cudaMemcpy(dC_float_stream, hC_float_stream, sizeof_C * size_of_type, cudaMemcpyHostToDevice);
   cudaMemcpy(dC_float_reference, hC_float_reference, sizeof_C * size_of_type, cudaMemcpyHostToDevice);
 
-  // Define pointers to matrices in GPU device memory.
+  // Define pointers to matrices in GPU device memory using half.
   type_ab *A;
   type_ab *A_transpose;
-  type_ab *A_stream;
 
   type_ab *B_pruned;
   type_ab *B_purned_transpose;
@@ -1109,7 +981,7 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   float_to_half<<<grid_size, block_size>>>(C_reference, dC_float_reference, sizeof_C);
 
 
-  // Cutlass Base
+  // Cutlass Baseline
   result = Cutlass_Gemm_NN(N, M, K, alpha, B_pruned, N, A, K, beta, C, N);
 
   // Cutlass reference
@@ -1120,8 +992,8 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   result = Stream_Gemm_NN(M, N, K, alpha, A_transpose, B_stream, beta, C_stream, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
 
   //Pruned cuBlase GEMM
-  result = CuBlas_Gemm_NN_reference(M, N, K, alpha, A_transpose, B_stream, beta, C_reference, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
   // result = ReferenceGemm(M, N, K, alpha, A, N, B_pruned, K, beta, C_reference, N);
+  result = CuBlas_Gemm_NN_reference(M, N, K, alpha, A_transpose, B_stream, beta, C_reference, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
 
   if (result != cudaSuccess) {
     std::cerr << "CUTLASS GEMM kernel failed: "
@@ -1171,48 +1043,73 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   print_matrix(host_cublas, M, N, Column_major, 1024);
 #endif
 
-//host_cutlass 为剪枝基础版本，因为计算顺序不同，结果有可能和 host_cutlass_transpose有一定误差。
-checkout(host_cutlass, host_stream, M, N, true, 1e-5);
 
-//host_cutlass_transpose 的值和 host_stream 无精度误差 （计算方法方式完全一样）。 //主要验证这个。
-checkout(host_cutlass_transpose, host_stream, M, N, false, 1e-10);
+  //The host_cutlass_transpose must be the exaly same with host_stream.
+  checkout(host_cutlass_transpose, host_stream, M, N, false, 1e-10);
 
-//host_cutlass 和 host_cublas 有一定的精度误差, CUTLASS 本身相比于 cublas的误差在不同显卡上表现不同， 可调整 err测试。
-checkout(host_cutlass, host_cublas, M, N, true, 1e-3);
+  //The host_cutlass is the CUTLASS baseline.
+  checkout(host_cutlass, host_stream, M, N, true, 1e-5);
 
-//host_stream 和 host_cublas 有较大的精度误差， K较小时, 满足 1e-3。
-checkout(host_stream, host_cublas, M, N, false, 1e-3);
-
-
+  //The CUTLASS source library has minor precision differences from cuBLAS.
+  checkout(host_cutlass, host_cublas, M, N, true, 1e-3);
 
   //
   // Free device memory allocations.
   //
+  delete[] hA_float;
+  delete[] hA_float_transpose;
+  delete[] hB_float;
+  delete[] hB_float_purned;
+  delete[] hB_float_purned_transpose;
+  delete[] hB_float_stream;
+  delete[] hC_float;
+  delete[] hC_float_transpose;
+  delete[] hC_float_stream;
+  delete[] hC_float_reference;
 
-  // cudaFree(C_reference);
-  // cudaFree(C_cutlass);
-  // cudaFree(B);
-  // cudaFree(A);
+  cudaFree(dA_float);
+  cudaFree(dA_float_transpose);
+  cudaFree(dB_float_purned);
+  cudaFree(dB_float_purned_transpose);
+  cudaFree(dB_float_stream);
+  cudaFree(dC_float);
+  cudaFree(dC_float_transpose);
+  cudaFree(dC_float_stream);
+  cudaFree(dC_float_reference);
+  cudaFree(A);
+  cudaFree(A_transpose);
+  cudaFree(B_pruned);
+  cudaFree(B_purned_transpose);
+  cudaFree(B_stream);
+  cudaFree(C);
+  cudaFree(C_transpose);
+  cudaFree(C_stream);
+  cudaFree(C_reference);
+  for(int i = 0; i < block_num; i++)
+  {
+    cudaFree(mask_k[i]);
+    cudaFree(mask_n[i]);
+  }
 
   return cudaSuccess;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Entry point to basic_gemm example.
+/// Entry point to stream_gemm example.
 //
 // usage:
 //
-//   00_basic_gemm <M> <N> <K> <alpha> <beta>
+//   test_basic_nn <M> <N> <K> <N_pruned> <K_pruned>
 //
 int main(int argc, const char *arg[]) {
 
   //
-  // Parse the command line to obtain GEMM dimensions and scalar values.
+  // Parse the command line to obtain GEMM dimensions.
   //
 
   // GEMM problem dimensions.
-  //int problem[3] = { 10240, 4096, 4096 };
+  // M N K N_pruned K_pruned
   int problem[5] = {768, 768, 768, 768, 768};
 
   for (int i = 1; i < argc && i < 6; ++i) {
@@ -1223,15 +1120,9 @@ int main(int argc, const char *arg[]) {
   // Scalars used for linear scaling the result of the matrix product.
   float scalars[2] = { 1, 0 };
 
-  for (int i = 6; i < argc && i < 8; ++i) {
-    std::stringstream ss(arg[i]);
-    ss >> scalars[i - 4];
-  }
-
   //
   // Run the CUTLASS GEMM test.
   //
-
   cudaError_t result = TestCutlassGemm(
     problem[0],     // GEMM M dimension
     problem[1],     // GEMM N dimension
@@ -1243,7 +1134,7 @@ int main(int argc, const char *arg[]) {
   );
 
   if (result == cudaSuccess) {
-    //std::cout << "Passed." << std::endl;
+    std::cout << "Passed." << std::endl;
   }
 
   // Exit.

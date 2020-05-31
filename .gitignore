@@ -3,3 +3,4 @@
 build/
 *.pkl
 .vscode
+.DS_Store
