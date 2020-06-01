@@ -37,8 +37,8 @@ using namespace std;
 
 enum Layout {Column_major, Row_major};
 
-// #define CUDA_MODE
-#define TENSOR_MODE
+#define CUDA_MODE
+// #define TENSOR_MODE
 
 #ifdef CUDA_MODE
 typedef float type_ab;
@@ -586,7 +586,7 @@ cudaError_t ReferenceGemm(
   float cublasTime;
   cudaEventElapsedTime(&cublasTime, startcublas, stopcublas);
   cublasTime /= (float)ites;
-  printf("%f\n", cublasTime * 1000);
+  printf("cuBLAS time : %f ns\n", cublasTime * 1000);
 
   return cudaGetLastError();
 }
@@ -994,7 +994,6 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   result = Stream_Gemm_NN(M, N, K, alpha, A_transpose, B_stream, beta, C_stream, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
 
   //Pruned cuBlase GEMM
-  // result = ReferenceGemm(M, N, K, alpha, A, N, B_pruned, K, beta, C_reference, N);
   result = CuBlas_Gemm_NN_reference(M, N, K, alpha, A_transpose, B_stream, beta, C_reference, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
 
   if (result != cudaSuccess) {
@@ -1019,7 +1018,8 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
       << cudaGetErrorString(result) << std::endl;
       return result;
   }
- 
+  // Only for reference time.
+  result = ReferenceGemm(M, N, K, alpha, A, N, B_pruned, K, beta, C_reference, N);
 
 
 
@@ -1045,15 +1045,31 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   print_matrix(host_cublas, M, N, Column_major, 1024);
 #endif
 
+#ifdef CUDA_MODE
+  double err0 = 1e-10;
+  double err1 = 1e-3;
+  double err2 = 1e-10;
+  double err3 = 1e-3;
+#else
+  double err0 = 1e-10;
+  double err1 = 1e-10;
+  double err2 = 1e-2;
+  double err3 = 1e-2;
+#endif
 
   //The host_cutlass_transpose must be the exaly same with host_stream.
-  checkout(host_cutlass_transpose, host_stream, M, N, false, 1e-10);
+  checkout(host_cutlass_transpose, host_stream, M, N, false, err0);
 
-  //The host_cutlass is the CUTLASS baseline.
-  checkout(host_cutlass, host_stream, M, N, true, 1e-5);
+  //The CUTLASS source library may have minor precision differences from cuBLAS.
+  //Notice that host_stream and host_cublas have low precision differences using volta884 FP16 on V100 tensor core with small K(<2048).
+  checkout(host_stream, host_cublas, M, N, false, err1);
 
-  //The CUTLASS source library has minor precision differences from cuBLAS.
-  checkout(host_cutlass, host_cublas, M, N, true, 1e-3);
+  //The host cutlass is the CUTLASS baseline and low precision differences because of sparsity.
+  //Notice that host_stream and host_cutlass have high precision using FP32 on V100 CUDA core.
+  checkout(host_cutlass, host_stream, M, N, true, err2);
+
+  checkout(host_cutlass, host_cublas, M, N, true, err3);
+
 
   //
   // Free device memory allocations.
@@ -1117,6 +1133,9 @@ int main(int argc, const char *arg[]) {
   for (int i = 1; i < argc && i < 6; ++i) {
     std::stringstream ss(arg[i]);
     ss >> problem[i - 1];
+
+    //Because of the limitation of CUTLASS, the numbers must be the multiple of 8.
+    problem[i - 1] = (problem[i - 1] + 7) / 8 * 8;
   }
   
   // Scalars used for linear scaling the result of the matrix product.

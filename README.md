@@ -6,7 +6,7 @@ CUTLASS Profiling
 $ git clone https://github.com/clevercool/SCTest.git
 $ cd SCTest
 $ mkdir -p build && cd build
-$ cmake -DSM=75 -DCMAKE_BUILD_TYPE=Release ..
+$ cmake -DCMAKE_BUILD_TYPE=Release ..
 $ cd perf
 $ make
 
