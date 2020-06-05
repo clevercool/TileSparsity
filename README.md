@@ -31,4 +31,4 @@ CUTLASS GEMM : 849.862732 us.
 Stream  GEMM : 417.427826 us.
 ```
 
-Stream GEMM has about 2.26x speedup than CUTLASS GEMM with 75% sparsity.
+Stream GEMM has about 2.26x speedup than CUTLASS GEMM with 75% sparsity on V100.
