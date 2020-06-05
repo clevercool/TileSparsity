@@ -1,20 +1,18 @@
 Stream masked CUTLASS
 ===================
 
-Profiling for SC 2020.
+Profiling for SC 2020 review.
 
 ## Build and Run
++ Prerequisites: CUDA >= 10.1
 ```shell
-$ git clone https://github.com/clevercool/SCTest.git
-$ cd SCTest
 $ mkdir -p build && cd build
 $ cmake -DCMAKE_BUILD_TYPE=Release ..
 $ cd perf
 $ make
 
-$ #Base GEMM size for BERT
+$ #75% Sparsity GEMM Test for BERT on V100 Tensor Core.
 $ #./test_basic_nn <M> <N> <K> <N_pruned> <K_pruned>
-$ # 75% Sparsity Test
 $ ./test_basic_nn 12800 768 768 384 384        # 4 times.
 CUTLASS GEMM : 252.878403 us.
 CUTLASS GEMM : 252.665283 us.
@@ -31,4 +29,11 @@ CUTLASS GEMM : 849.862732 us.
 Stream  GEMM : 417.427826 us.
 ```
 
-Stream GEMM has about 2.26x speedup than CUTLASS GEMM with 75% sparsity on V100.
+The 75% sparsity stream masked GEMM achieves about 2.26x speedup of CUTLASS dense GEMM  using volta884 API, which is only for the V100 tensor core. The stream masked GEMM can also run on the CUDA core.
+
+
+## Referrence
+
+[CUTLASS 1.3](https://github.com/NVIDIA/cutlass/tree/v1.3.0)
+
+[FasterTransformer V1](https://github.com/NVIDIA/DeepLearningExamples/tree/master/FasterTransformer/v1)
