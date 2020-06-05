@@ -1,4 +1,4 @@
-Stream masked CUTLASS
+Stream masked GEMM based on CUTLASS 1.3
 ===================
 
 Profiling for SC 2020 review.
