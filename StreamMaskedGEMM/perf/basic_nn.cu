@@ -394,8 +394,8 @@ cudaError_t Stream_Gemm_NN(
   int off_C[]) {
     
   typename Gemm_NN::Params params;  
-  cudaStream_t stream[32];
-  for(int i = 0; i < 32; i++)
+  cudaStream_t stream[MAX_BLOCK_NUM];
+  for(int i = 0; i < MAX_BLOCK_NUM; i++)
   {
     cudaStreamCreate(&stream[i]);
   }
@@ -438,7 +438,7 @@ cudaError_t Stream_Gemm_NN(
 
   printf("Stream  GEMM : %f us.\n", cutlassTime * 1000);
   // printf("%f\n", cutlassTime * 1000);
-  for(int i = 0; i < 32; i ++)
+  for(int i = 0; i < MAX_BLOCK_NUM; i ++)
   {
     cudaStreamDestroy(stream[i]);
   }
@@ -1078,15 +1078,15 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   double err3 = 1e-2;
 #endif
 
-  printf("The host_cutlass_transpose must be the exaly same with host_stream.\n");
+  // printf("The host_cutlass_transpose must be the exactly same as host_stream.\n");
   checkout(host_cutlass_transpose, host_stream, M, N, false, err0);
 
-  printf("The CUTLASS source library may have minor precision differences from cuBLAS on CUDA core.\n");
-  printf("The host_stream and host_cublas have low precision differences using volta884 FP16 on V100 tensor core with small K(<2048)\n");
+  // printf("The CUTLASS source library may have minor precision differences from cuBLAS on the CUDA core.\n");
+  // printf("The host_stream and host_cublas have low precision differences using volta884 FP16 on V100 tensor core with small K(<2048).\n");
   checkout(host_stream, host_cublas, M, N, false, err1);
 
-  printf("The host_cutlass is the CUTLASS baseline and has precision differences because of sparsity.\n");
-  printf("The host_stream and host_cutlass have low precision differences using FP32 on V100 CUDA core.\n");
+  // printf("The host_cutlass is the CUTLASS baseline and has precision differences because of sparsity.\n");
+  // printf("The host_stream and host_cutlass have low precision differences using FP32 on the V100 CUDA core.\n");
   checkout(host_cutlass, host_stream, M, N, true, err2);
   checkout(host_cutlass, host_cublas, M, N, true, err3);
 
