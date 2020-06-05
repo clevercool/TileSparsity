@@ -19,15 +19,7 @@ g1percent=5
 num_train_epochs=1
 if [[ "${cuda_device}" = "0" || "${cuda_device}" = "1" || "${cuda_device}" = "2" || "${cuda_device}" = "3" ]]
 then
-	#for spar in 25 50 62.5 68.75 ; do
-	#for spar in  35 50 55 60 65 75 80 85 90 95; do
-	#for spar in  70 75; do
-	#for spar in 38 39; do
-	#for spar in 20	37	50  55  61; do
-	#for spar in 25 50 75; do
 	for spar in 25 35 50 55 60 65 70 75 80 85 90 95; do
-	#for spar in 35; do
-	#for spar in 25 50 62.5 75 81.25 87.5 93.75; do 
 	for run in 0  ; do
     if [ "$mode" = "pretrain" ]
     then
@@ -41,9 +33,7 @@ then
 		output_dir="${task_name}_gpu${cuda_device}_pruning_${spar}%_granularity_${granularity}_taylor_score_pruning_type_${pruning_type}_${STARTTIME}_${number}_g1p_${g1percent}_epoch_${num_train_epochs}/model_${run}"
 		if [[ "${previous_spar}" = "0" ]]
 		then
-			init_dir=${pretrained_path}/model_${run}
-			#init_dir="/home/cguo/bert/bert-pruning/MNLI_gpu1_pruning_37%_granularity_128_taylor_score_pruning_type_19_2020-04-14_10_g1p_1_epoch_1/model_0"
-		
+			init_dir=${pretrained_path}/model_${run}		
 		else
 			init_dir="${task_name}_gpu${cuda_device}_pruning_${previous_spar}%_granularity_${granularity}_taylor_score_pruning_type_${pruning_type}_${STARTTIME}_${number}_g1p_${g1percent}_epoch_${num_train_epochs}/model_${run}"
 		fi

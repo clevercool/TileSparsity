@@ -1,7 +1,8 @@
 BERT pruning
 ===
 ## Introduction
-This project is based on the [BERT](https://github.com/google-research/bert), where you can find more details.
+This project is based on the [BERT](https://github.com/google-research/bert), where you can find more informations.
+
 Currently, we can run the bash file "continued_run.sh" to execute the bert-pruning. The bash file requires two args: mode and GPU device number.
 For example, the command of using GPU 0 and prune mode is "bash continued_run.sh prune 0".
 Note that the bash file use the bert pretrained model in the parent folder (../Model/), like:
@@ -36,9 +37,9 @@ type 2: granularity pruning on dim K. The granularity must be divide hidden unit
 
 type 3: granularity pruning on [Q K V] together. The granularity is 3x768. 
 
-type 4: Implementation 1 of VW. Prune on N dimension. Block size is 1x16, and choose top 4. 
+type 4: VW. Prune on N dimension. Block size is 1x16, and choose top 4. 
 
-type 5: Implementation 2 of BW. Prune on K-N dimension. Block size is 32x32. 
+type 5: BW. Prune on K-N dimension. Block size is 32x32. 
 
 type 7: TW pruning on dim K, consider the whole network but not layer by layer.
 

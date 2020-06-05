@@ -1,0 +1,15 @@
+bazel-bin
+bazel-genfiles
+bazel-out
+bazel-testlogs
+*.log
+*.pyc
+output/
+data_set/
+envi_model_*
+envi_model_*/
+nmt_iwslt15_output/
+tmp/
+nmt_iwslt15_1_output/
+nmt_iwslt15_2_output/
+nmt_iwslt15_6_output/
