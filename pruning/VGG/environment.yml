@@ -1,0 +1,9 @@
+name: pruning
+dependencies:
+    - python=3.7
+    - pip
+    - tensorflow-gpu=1.13.1
+    - pip:
+        - mmdnn
+        - black
+        - flake8
