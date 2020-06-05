@@ -1,0 +1,15 @@
+MNLI_*
+SQUAD_*
+output/*
+.vscode/settings.json
+continued_run_.sh
+*.pyc
+__pycache/*
+EW_output/*
+*.pickle
+squad_data/*
+profile/*
+output*/
+*.tf_record
+prune_mask/
+*.pkl
