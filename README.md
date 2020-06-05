@@ -1,9 +1,7 @@
 Tile-wise Sparsity
 ===
 
-## A repository for SC 2020 review.
-
-
+## A repository for SC 2020.
 
 ```
 /Pruning: Implemented the EW, VW, BW, and TW pruning pattern.
