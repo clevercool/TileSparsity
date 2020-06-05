@@ -53,8 +53,8 @@ using namespace std;
 
 enum Layout {Column_major, Row_major};
 
-#define CUDA_MODE
-// #define TENSOR_MODE
+// #define CUDA_MODE
+#define TENSOR_MODE
 
 #ifdef CUDA_MODE
 typedef float type_ab;
@@ -241,7 +241,7 @@ cudaError_t insertRow(T *matrix, T const *matrix_2, int rows, int columns, int *
 typedef cutlass::gemm::SgemmTraits<
   cutlass::MatrixLayout::kColumnMajor,   // layout of A matrix
   cutlass::MatrixLayout::kColumnMajor,   // layout of B matrix
-  cutlass::Shape<8, 128, 128>            // threadblock tile size
+  cutlass::Shape<8, 128, 64>            // threadblock tile size
 >
 GemmTraits_NN;
 #endif
@@ -368,7 +368,8 @@ cudaError_t Cutlass_Gemm_NN(
   cudaEventElapsedTime(&cutlassTime, startcutlass, stopcutlass);
   cutlassTime /= (float)ites;
 
-  printf("CUTLASS Baseline time %f ns.\n", cutlassTime * 1000);
+  printf("CUTLASS GEMM : %f us.\n", cutlassTime * 1000);
+  // printf("%f \n", cutlassTime * 1000);
 
   // Return any errors associated with the launch or cudaSuccess if no error.
   return cudaGetLastError();
@@ -435,7 +436,8 @@ cudaError_t Stream_Gemm_NN(
   cudaEventElapsedTime(&cutlassTime, startcutlass, stopcutlass);
   cutlassTime /= (float)ites;
 
-  printf("Stream GEMM time: %f ns\n", cutlassTime * 1000);
+  printf("Stream  GEMM : %f us.\n", cutlassTime * 1000);
+  // printf("%f\n", cutlassTime * 1000);
   for(int i = 0; i < 32; i ++)
   {
     cudaStreamDestroy(stream[i]);
@@ -602,7 +604,8 @@ cudaError_t ReferenceGemm(
   float cublasTime;
   cudaEventElapsedTime(&cublasTime, startcublas, stopcublas);
   cublasTime /= (float)ites;
-  printf("cuBLAS time : %f ns\n", cublasTime * 1000);
+  // printf("%f\n", cublasTime * 1000);
+  printf("cuBLAS  GEMM : %f us\n", cublasTime * 1000);
 
   return cudaGetLastError();
 }
@@ -833,7 +836,7 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
 
   int block_num = (N_pruned + N_dim - 1) / N_dim;
   assert(block_num <= MAX_BLOCK_NUM);
-  printf("block_num : %d\n", block_num);
+  // printf("block_num : %d\n", block_num);
 
   // K_cal is pruned K size to calculate.
   int K_cal[MAX_BLOCK_NUM];
@@ -1000,16 +1003,18 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
 
 
   // Cutlass Baseline
+  //warm up
+  result = Cutlass_Gemm_NN(N, M, K, alpha, B_pruned, N, A, K, beta, C, N);
   result = Cutlass_Gemm_NN(N, M, K, alpha, B_pruned, N, A, K, beta, C, N);
 
   // Cutlass reference
   // result = Cutlass_Gemm_NN(M, N, K, alpha, A_transpose, M, B_purned_transpose, K, beta, C, M);
   result = Stream_Gemm_NN_reference(M, N, K, alpha, A_transpose, B_stream, beta, C_transpose, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
 
-  //Pruned Stream GEMM
+  // //Pruned Stream GEMM
   result = Stream_Gemm_NN(M, N, K, alpha, A_transpose, B_stream, beta, C_stream, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
 
-  //Pruned cuBlase GEMM
+  // //Pruned cuBlase GEMM
   result = CuBlas_Gemm_NN_reference(M, N, K, alpha, A_transpose, B_stream, beta, C_reference, block_num, N_cal, K_cal, mask_n, mask_k, off_B, off_C);
 
   if (result != cudaSuccess) {
@@ -1035,7 +1040,7 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
       return result;
   }
   // Only for reference time.
-  result = ReferenceGemm(M, N, K, alpha, A, N, B_pruned, K, beta, C_reference, N);
+  // result = ReferenceGemm(M, N, K, alpha, A, N, B_pruned, K, beta, C_reference, N);
 
 
 
@@ -1073,17 +1078,16 @@ cudaError_t TestCutlassGemm(int M, int N, int K, int N_pruned, int K_pruned, flo
   double err3 = 1e-2;
 #endif
 
-  //The host_cutlass_transpose must be the exaly same with host_stream.
+  printf("The host_cutlass_transpose must be the exaly same with host_stream.\n");
   checkout(host_cutlass_transpose, host_stream, M, N, false, err0);
 
-  //The CUTLASS source library may have minor precision differences from cuBLAS.
-  //Notice that host_stream and host_cublas have low precision differences using volta884 FP16 on V100 tensor core with small K(<2048).
+  printf("The CUTLASS source library may have minor precision differences from cuBLAS on CUDA core.\n");
+  printf("The host_stream and host_cublas have low precision differences using volta884 FP16 on V100 tensor core with small K(<2048)\n");
   checkout(host_stream, host_cublas, M, N, false, err1);
 
-  //The host cutlass is the CUTLASS baseline and low precision differences because of sparsity.
-  //Notice that host_stream and host_cutlass have high precision using FP32 on V100 CUDA core.
+  printf("The host_cutlass is the CUTLASS baseline and has precision differences because of sparsity.\n");
+  printf("The host_stream and host_cutlass have low precision differences using FP32 on V100 CUDA core.\n");
   checkout(host_cutlass, host_stream, M, N, true, err2);
-
   checkout(host_cutlass, host_cublas, M, N, true, err3);
 
 
