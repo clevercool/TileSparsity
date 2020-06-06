@@ -19,6 +19,6 @@ conda activate pruning
 python download_model.py
 ./run.sh
 ```
-## Referrence
+## References
 
 [Tensorflow Model Garden](https://github.com/tensorflow/models)

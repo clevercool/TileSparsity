@@ -47,6 +47,6 @@ type 8: TW pruning on dim K and N, consider the whole network but not layer by l
 
 
 
-## Reference
+## References
 
 [BERT](https://github.com/google-research/bert)
