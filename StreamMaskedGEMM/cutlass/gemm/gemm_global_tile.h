@@ -282,7 +282,6 @@ struct GemmGlobalIteratorAb
       typename Base::AccessType& value, int d, int h, int w, int c, int mask_offset) const {
     int const offset =
         ComputeOffsetFromStrides<typename Base::ImmediateOffsetStrides>::get(0, 0, w, c);
-        //printf("offset : %d  mask_offset : %d \n", offset, mask_offset);
     Load<Scalar,
          Base::kAccessSize,
          Base::kMemorySpace,
@@ -290,10 +289,6 @@ struct GemmGlobalIteratorAb
          typename Base::FragmentElement,
          Base::Tile::kW,
          Base::kAccessSize * sizeof(Scalar)>::load(value, params.pointer, offset + mask_offset);
-        //  half* tt = (half*)value.registers;
-        //  float t1 = tt[0];
-        //  float t2 = tt[1];
-         //if(opA) printf("%d, %d, %f, %f\n", threadIdx.x, k, t1, t2);
   }
 
   CUTLASS_HOST_DEVICE void load_element(
@@ -362,14 +357,12 @@ struct GemmGlobalIteratorAb
 
   template <typename Fragment>
   CUTLASS_HOST_DEVICE void load_post_increment(Fragment& fragment, int& AdimK, const int* mask) {
-    //printf("thread_id: (%d,%d,%d) (%d,%d,%d)\n", threadIdx.x, threadIdx.y, threadIdx.z, blockIdx.x, blockIdx.y, blockIdx.z);
     typename Base::FragmentIterator frag_iterator(fragment);
     for (int d = 0; d < Base::Iterations::kD; ++d) {
       for (int h = 0; h < Base::Iterations::kH; ++h) {
         for (int w = 0; w < Base::Iterations::kW; ++w) {
           for (int c = 0; c < Base::Iterations::kC; ++c) {
             if (valid(d, h, w, c)) {
-              //if(opA) printf(" %d %d %d %d %d, %d, %d \n", d,h,w,c,threadIdx.x, AdimK, mask[AdimK]);
               load_element(
                   reinterpret_cast<typename Base::AccessType&>(frag_iterator.at(d, h, w, c)),
                   d,
@@ -549,8 +542,6 @@ struct GemmGlobalIteratorCd : public TileIteratorBase<TileTraits_,
 
     CdimN += h;
 
-    //printf("tid : %d, h: %d, w: %d, offset: %d, stride_h : %d,  offset_2: %d, CdimN: %d \n", threadIdx.x, h, w, offset, params.stride_h, ((h * params.stride_h + w) + offset), CdimN);
-
     // Prepare the vector of predicates.
     for (int i = 0; i < Base::Iterations::kW; ++i) {
       predicates.set(i, w + i * Base::Delta::kW < bounds[2]);
@@ -680,7 +671,6 @@ struct GemmGlobalIteratorCd : public TileIteratorBase<TileTraits_,
         for (int w = 0; w < Base::Iterations::kW; ++w) {
           for (int c = 0; c < Base::Iterations::kC; ++c) {
             if (valid(d, h, w, c)) {
-              //printf(" %d %d %d %d %d, %d, %d \n", d,h,w,c,threadIdx.x, CdimN, mask[CdimN]);
               load_element(
                   reinterpret_cast<typename Base::AccessType&>(frag_iterator.at(d, h, w, c)),
                   d,
@@ -747,7 +737,6 @@ struct GemmGlobalIteratorCd : public TileIteratorBase<TileTraits_,
         for (int w = 0; w < Base::Iterations::kW; ++w) {
           for (int c = 0; c < Base::Iterations::kC; ++c) {
             if (valid(d, h, w, c)) {
-              //printf(" %d %d %d %d %d, %d, %d \n", d,h,w,c,threadIdx.x, DdimN, mask[DdimN]);
               store_element(
                   reinterpret_cast<typename Base::AccessType&>(frag_iterator.at(d, h, w, c)),
                   d,
