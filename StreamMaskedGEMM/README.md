@@ -30,7 +30,7 @@ Stream  GEMM : 417.427826 us.
 The 75% sparsity stream masked GEMM achieves about 2.26x speedup of CUTLASS dense GEMM  using volta884 API, which is only for the V100 tensor core. The stream masked GEMM can also run on the CUDA core.
 
 
-## Referrence
+## Reference
 
 [CUTLASS 1.3](https://github.com/NVIDIA/cutlass/tree/v1.3.0)
 
