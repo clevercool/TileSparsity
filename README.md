@@ -12,3 +12,6 @@ Tile-wise Sparsity
 ```
 
 If you have any questions about this repository, please contact guocong@sjtu.edu.cn.
+
+## License
+Licensed under an Apache-2.0 license.

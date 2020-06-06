@@ -1,7 +1,7 @@
 BERT pruning
 ===
 ## Introduction
-This project is based on the [BERT](https://github.com/google-research/bert), where you can find more informations.
+This project is based on the [BERT](https://github.com/google-research/bert), where you can find more information.
 
 Currently, we can run the bash file "continued_run.sh" to execute the bert-pruning. The bash file requires two args: mode and GPU device number.
 For example, the command of using GPU 0 and prune mode is "bash continued_run.sh prune 0".
@@ -44,3 +44,9 @@ type 5: BW. Prune on K-N dimension. Block size is 32x32.
 type 7: TW pruning on dim K, consider the whole network but not layer by layer.
 
 type 8: TW pruning on dim K and N, consider the whole network but not layer by layer.
+
+
+
+## Reference
+
+[BERT](https://github.com/google-research/bert)
