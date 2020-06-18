@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-for type in "bw"; do
+for type in "ew" "bw" "vw" "tw1"; do
 
 task_name='nmt_iwslt15_1'
 cuda_device=0

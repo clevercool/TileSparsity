@@ -157,7 +157,7 @@ flags.DEFINE_float(
     "If null_score - best_non_null is greater than the threshold predict null.")
 
 flags.DEFINE_float(
-    "sparsity", 0.0,
+    "sparsity", 0,
     "The sparsity of network pruning. ")
 
 flags.DEFINE_string("mode", None, "[pretrain/prune/export] mode.")

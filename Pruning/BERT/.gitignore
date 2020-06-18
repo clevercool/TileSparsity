@@ -13,3 +13,5 @@ output*/
 *.tf_record
 prune_mask/
 *.pkl
+./Model/*
+./glue_data/*

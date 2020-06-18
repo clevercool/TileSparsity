@@ -8,26 +8,53 @@ For example, the command of using GPU 0 and prune mode is "bash continued_run.sh
 Note that the bash file use the bert pretrained model in the parent folder (../Model/), like:
 
 ```
-/Model
-   |--/uncased_L-12_H-768_A_12: small bert model pretrained by google. 
-   |--/MNLI_pretrained_model: use uncased_L-12_H-768_A_12 as pretrained model and fine-tune on MNLI with some epochs.
-/glue_data: 
-   |--/MNLI: 
-   |--/MRPC:
-   |--/...
-/bert-pruning: the folder of this project
+/BERT: the folder of this project
    |--/other_function:
    |--/utils:
       |--Myhook.py: The main file for pruning.
    |--pruning_classifier.py
    |--run_squad.py
-   |--run.sh
-   |--run_squad.sh
-   |--continued_run.sh # run in multiple stage.
+   |--run.sh           # run the pruning.
+   |--run_squad.sh     # run the pruning on SQuAd.
+   |--continued_run.sh # run the multiple stage pruning.
+   /Model
+      |--/uncased_L-12_H-768_A_12: small bert model pretrained by google. 
+      |--/MNLI_pretrained_model: use uncased_L-12_H-768_A_12 as pretrained model and fine-tune on MNLI with some epochs.
+   /glue_data: 
+      |--/MNLI: 
+      |--/MRPC:
+      |--/...
 ```
 
 ## Pruning
-The pruning algorithms are implemented in "SparseColumnPruningRank" class. Currently, there are Four types of pruning_types. 
+Create a virtual environment
+```bash
+conda env create -f environment.yml
+conda activate pruning
+```
+Download the dataset
+```
+# GLUE
+python ./other_function/download_glue_data.py
+# SQuAD
+bash ./download_squad_data.sh
+```
+Download the model
+```
+mkdir -p Model
+wget -P ./Model https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip
+unzip ./Model/uncased_L-12_H-768_A-12.zip  -d ./Model/
+```
+
+Pretrain the model
+```
+# For GLUE 
+bash ./run.sh pretrain 0
+# For SQuAD
+bash ./run_squad.sh pretrain 0
+```
+
+Prune the model. Set pruning_type to choose the pruning method.
 
 type 0: prune the whole head. For example, prune from 12 heads to 6 heads. 
 
@@ -44,7 +71,14 @@ type 5: BW. Prune on K-N dimension. Block size is 32x32.
 type 7: TW pruning on dim K, consider the whole network but not layer by layer.
 
 type 8: TW pruning on dim K and N, consider the whole network but not layer by layer.
+```
+# For GLUE 
+bash ./continued_run.sh prune 0
+# For SQuAD
+bash ./run_squad.sh prune 0
+```
 
+You can find the output file started with task name.
 
 
 ## References

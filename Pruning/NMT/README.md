@@ -32,7 +32,7 @@ Run the pruning
 ```
 
 
-For tutorial, you can see [github](https://github.com/tensorflow/nmt/).
+You can see [here](https://github.com/tensorflow/nmt/) for tutorial.
 # References
 
 [NMT](https://github.com/tensorflow/nmt)

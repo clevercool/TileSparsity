@@ -2,13 +2,13 @@
 # mode: pretrain or prune
 # cuda_device: use which GPU, 0 or 1 or ...
 # task_name: MRPC or MNLI or ...
-bert_base_dir='../Model/uncased_L-12_H-768_A-12'
-task_name='MNLI'
+bert_base_dir='./Model/uncased_L-12_H-768_A-12'
+task_name='MRPC'
 mode=${1}
 cuda_device=${2}
 granularity=128
 pruning_type=5
-pretrained_path=../Model/${task_name}_pretrained_model
+pretrained_path=./Model/${task_name}_pretrained_model
 STARTTIME=$( date '+%F')
 if [[ "${cuda_device}" = "0" || "${cuda_device}" = "1" || "${cuda_device}" = "2" ]]
 then
@@ -34,7 +34,7 @@ then
     CUDA_VISIBLE_DEVICES=${cuda_device} python3 pruning_classifier.py --task_name=${task_name} \
     --do_train=true \
     --do_eval=true \
-    --data_dir=../glue_data/${task_name} \
+    --data_dir=./glue_data/  \
     --vocab_file=$bert_base_dir/vocab.txt \
     --bert_config_file=$bert_base_dir/bert_config.json \
     --init_checkpoint=${init_dir} \

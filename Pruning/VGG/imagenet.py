@@ -22,8 +22,7 @@ from tensorflow.contrib import slim
 # from slim.preprocessing import inception_preprocessing
 
 import imagenet_preprocessing
-import resnet_util
-from resnet_imagenet_preprocessing import preprocess_image
+from imagenet_preprocessing import preprocess_image
 __all__ = ["train", "test", "normalize", "normalize_alexnet"]
 
 _DEFAULT_IMAGE_SIZE = 224
