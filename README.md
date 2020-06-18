@@ -15,7 +15,7 @@ Every subfolder has README to explain how to run it.
 
 ## Environment 
 
-We prune the networks, VGG, NMT, and BERT on several Linux servers with different GPU versions (GTX 1080, GTX 1080 Ti, RTX 2080 Ti, and Quadro GP100 GPU) without impact on the accuracy of models. The Stream Masked GEMM only runs on the Tesla V100 to profile performance. You can find the detail of the environment [here](https://github.com/clevercool/TileSparsity/environment.txt) collected by this [script](https://github.com/SC-Tech-Program/Author-Kit).
+We prune the networks, VGG, NMT, and BERT on several Linux servers with different GPU versions (GTX 1080, GTX 1080 Ti, RTX 2080 Ti, and Quadro GP100 GPU) without impact on the accuracy of models. The Stream Masked GEMM only runs on the Tesla V100 to profile performance. You can find the detail of the environment [here](https://github.com/clevercool/TileSparsity/blob/master/environment.txt) collected by this [script](https://github.com/SC-Tech-Program/Author-Kit).
 
 If you have any questions about this repository, please contact guocong@sjtu.edu.cn.
 
