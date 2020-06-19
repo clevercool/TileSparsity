@@ -1,6 +1,6 @@
 Tile Sparsity
 ===
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3900188.svg)](https://doi.org/10.5281/zenodo.3900188)
 ## A repository for SC2020 Artifact Description.
 
 This repository provides artifacts to reproduce the results of the manuscript, which introduces a pruning method: Tile Sparsity. The artifacts have two major parts: Pruning and Stream Masked GEMM. The file structure shows below:
