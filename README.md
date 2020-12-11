@@ -3,7 +3,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3900188.svg)](https://doi.org/10.5281/zenodo.3900188)
   
-```bash
+```
 @inproceedings{guo2020accelerating,
   title={Accelerating sparse DNN models without hardware-support via tile-wise sparsity},
   author={Guo, Cong and Hsueh, Bo Yang and Leng, Jingwen and Qiu, Yuxian and Guan, Yue and Wang, Zehuan and Jia, Xiaoying and Li, Xipeng and Guo, Minyi and Zhu, Yuhao},
