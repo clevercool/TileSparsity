@@ -68,9 +68,9 @@ type 4: VW. Prune on N dimension. Block size is 1x16, and choose top 4.
 
 type 5: BW. Prune on K-N dimension. Block size is 32x32. 
 
-type 7: TW pruning on dim K, consider the whole network but not layer by layer.
+type 7: TW pruning on dim K.
 
-type 8: TW pruning on dim K and N, consider the whole network but not layer by layer.
+type 8: TW pruning on dim K and N.
 ```
 # For GLUE 
 bash ./continued_run.sh prune 0
